@@ -45,7 +45,7 @@ def extract_text_from_pdf(pdf_file_path, output_path):
 
 extract_text_from_pdf('/content/RL.pdf','/content')
 
-mp = {}  # Dictionnaire pour stocker les sections
+final_data = [] # Dictionnaire pour stocker les sections
 
 romans = [
     'I', 'V', 'X'
@@ -57,6 +57,7 @@ with open("/content/file1.txt", "r") as file:
 str1 = ""  # Clé (titre)
 str2 = ""  # Valeur (contenu)
 map2 = {}
+name_root = "file1"
 for line in lines:
     line = line.strip()  # Supprime les espaces et sauts de ligne
 
@@ -70,10 +71,26 @@ for line in lines:
           tst+=1
     # Vérifie si la ligne commence par un nombre romain
     if first_word[0] in romans and tst==0 :
-        if str1:  # Sauvegarde l'ancienne section avant d'en commencer une nouvelle
-            mp[str1] = str2.strip()
-            
+        if(first_word[-1]=='.') :
+          first_word = first_word[:-1]
         map2[first_word] = line
+        if str1:  # Sauvegarde l'ancienne section avant d'en commencer une nouvelle
+            chaine = str2.strip()
+            name_of_part = str1
+            name_of_super_part = ""
+            list_of_name_of_part = str1.split(' ')
+            count=0
+            for r in list_of_name_of_part[0] :
+              if(r=='.') : 
+                count+=1
+              if(count==name_of_part.count('.') ) :
+                break
+              name_of_super_part+=r
+            #print(name_of_super_part)
+            if(len(name_of_super_part)==0 or name_of_super_part not in map2.keys()) :
+              final_data.append({"text": chaine,"metadata" : {"topic" : name_root, "subtopic" : name_of_part}})
+            else :
+              final_data.append({"text": chaine,"metadata" : {"topic" : map2[name_of_super_part], "subtopic" : name_of_part}})
         str1 = line  # Nouveau titre
         str2 = ""  # Réinitialise le contenu
     else:
@@ -81,8 +98,18 @@ for line in lines:
 
 # Ajouter la dernière section après la boucle
 if str1:
-    mp[str1] = str2.strip()
+            chaine = str2.strip()
+            name_of_part = str1
+            name_of_super_part = ""
+            count=0
+            for r in name_of_part :
+              if(count==name_of_part.count('.') ) :
+                count+=1
+                break
+              name_of_super_part+=r
+            if(len(name_of_super_part)==0 or name_of_super_part not in map2.keys()) :
+              final_data.append({"text": chaine,"metadata" : {"topic" : name_root , "subtopic" : name_of_part}})
+            else :
+              print(name_of_super_part)
+              final_data.append({"text": chaine,"metadata" : {"topic" : map2[name_of_super_part], "subtopic" : name_of_part}})
 
-# Affichage du dictionnaire
-for x, y in mp.items():
-    print(f"partie {x} : {y}\n")
