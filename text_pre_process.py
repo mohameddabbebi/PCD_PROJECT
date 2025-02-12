@@ -1,3 +1,50 @@
+import fitz
+
+def count_pdf_pages(pdf_path):
+    with fitz.open(pdf_path) as doc:
+        return len(doc)
+
+import os
+from hotpdf import HotPdf
+
+
+def extract_text_from_pdf(pdf_file_path, output_path):
+    """
+    Extracts text from all pages of a given PDF file and saves it to file1.txt.
+    
+    Parameters:
+    pdf_file_path (str): The path to the input PDF file.
+    output_path (str): The directory where file1.txt will be saved.
+    
+    Returns:
+    str: The full path of the saved text file.
+    """
+    try:
+        # Load the PDF document
+        hotpdf_document = HotPdf(pdf_file_path)
+
+        # Extract text from all pages
+        full_text = ""
+        for page_num in range(count_pdf_pages(pdf_file_path)):
+            full_text += hotpdf_document.extract_page_text(page=page_num) + "\n\n"
+
+        # Define the full path for the output file
+        output_file = os.path.join(output_path, "file1.txt")
+
+        # Write extracted text to the file
+        with open(output_file, "w", encoding="utf-8") as file:
+            file.write(full_text)
+
+        print(f"Text successfully saved to: {output_file}")
+        return output_file
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+
+extract_text_from_pdf('/content/RL.pdf','/content')
+
 mp = {}  # Dictionnaire pour stocker les sections
 
 romans = [
