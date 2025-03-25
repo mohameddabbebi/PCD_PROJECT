@@ -1,0 +1,110 @@
+import gradio as gr
+from huggingface_hub import InferenceClient
+from hotpdf import HotPdf
+from flask import Flask 
+from keras import layers
+# Directly pass the Hugging Face token to the InferenceClient constructor
+
+client = InferenceClient(
+    "microsoft/Phi-3.5-mini-instruct",
+    token="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"  # Replace with your actual token
+)
+# token  = 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
+# Custom function to extract text from PDF
+def extract_text_from_pdf(pdf_file_path):
+    hotpdf_document = HotPdf(pdf_file_path)
+    with open(pdf_file_path, "rb") as f:
+        hotpdf_document_2 = HotPdf(f)
+    full_page_text = hotpdf_document.extract_page_text(page=0)
+    return full_page_text
+
+# Respond function for analyzing the job description
+def respond_to_job_description(
+    message,
+    system_message,
+    max_tokens,
+    temperature,
+    top_p,
+):
+    # Define the prompt for structured data extraction
+    prompt = f"""Donner un questionnaire sur le cour suivant : {message} 
+    """
+
+    messages = [{"role": "system", "content": system_message}]
+    messages.append({"role": "user", "content": prompt})
+
+    response = ""
+    for message in client.chat_completion(
+        messages,
+        max_tokens=max_tokens,
+        stream=True,
+        temperature=temperature,
+        top_p=top_p,
+    ):
+        token = message.choices[0].delta.content
+        response += token
+
+    return response
+
+# Function to generate preselection questions
+def generate_preselection_questions(structured_data, system_message, max_tokens, temperature, top_p):
+    # Prompt for generating preselection questions
+    prompt = f"""Using the following structured job description data, generate preselection questions to evaluate candidates on both technical and soft skills:
+
+    Structured Data:
+    {structured_data}
+
+    Output Format:
+    "Question": ""
+    """
+
+    messages = [{"role": "system", "content": system_message}]
+    messages.append({"role": "user", "content": prompt})
+
+    response = ""
+    for message in client.chat_completion(
+        messages,
+        max_tokens=max_tokens,
+        stream=True,
+        temperature=temperature,
+        top_p=top_p,
+    ):
+        token = message.choices[0].delta.content
+        response += token
+
+    return response
+
+# Combine both functionalities
+def process_job_description_and_generate_questions(
+    pdf_file, system_message, max_tokens, temperature, top_p
+):
+    # Step 1: Extract text from the PDF
+    extracted_text = extract_text_from_pdf(pdf_file)
+
+    # Step 2: Generate structured data
+    structured_data = respond_to_job_description(
+        extracted_text, system_message, max_tokens, temperature, top_p
+    )
+    # Step 3: Generate preselection questions based on structured data
+    return structured_data
+
+# Gradio Interface
+demo = gr.Interface(
+    fn=process_job_description_and_generate_questions,
+    inputs=[
+        gr.File(file_count="single", label="Upload cour"),  # Upload PDF
+        gr.Textbox(value="You are a friendly assistant.", label="System message"),
+        gr.Slider(minimum=1, maximum=2048, value=512, step=1, label="Max new tokens"),
+        gr.Slider(minimum=0.1, maximum=4.0, value=0.7, step=0.1, label="Temperature"),
+        gr.Slider(
+            minimum=0.1, maximum=1.0, value=0.95, step=0.05, label="Top-p (nucleus sampling)"
+        ),
+    ],
+    outputs=[
+        gr.Textbox(label="Questionnaire"),  # Show the structured data
+        # Show generated preselection questions
+    ],
+)
+
+if __name__ == "__main__":
+    demo.launch(share=True)
