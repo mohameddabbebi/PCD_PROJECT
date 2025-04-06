@@ -18,7 +18,7 @@ def pre_of_the_preprocessing(final_data) :
   for x in final_data :
      subcontext = ""
      nbr_of_tokens = 0
-     paragraphes = re.split(r'\. +\n', x)
+     paragraphes = re.split(r'\. +\n', x['text'])
      paragraphes1 = [] 
      for x in paragraphes :
       paragraphes1.append([count_tokens_nltk(x),x])
