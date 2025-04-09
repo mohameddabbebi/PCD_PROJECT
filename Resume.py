@@ -3,7 +3,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 def Resume_pipe(context):
     model_name = 'facebook/bart-large-cnn'
-    api_token = "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"
+    api_token = "your token here"
 
     try:
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=api_token)
