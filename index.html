@@ -14,10 +14,34 @@
         <div class="input-container">
             <input type="text" id="user-input" placeholder="Écrivez votre message...">
             <button onclick="sendMessage()">📤</button>
+            <button onclick="GenereQuiz()">Quiz</button>
+            <button onclick="sendResume()">Résumé</button>
         </div>
     </div>
 
     <script>
+        function sendMessage1() {
+    chatbox.scrollTop = chatbox.scrollHeight;
+    
+    fetch('/quiz', {  // appel direct sans données
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        const botMessage = document.createElement("div");
+        botMessage.classList.add("message", "bot-message");
+        botMessage.innerText = data.response;
+        chatbox.appendChild(botMessage);
+
+        chatbox.scrollTop = chatbox.scrollHeight;
+    })
+    .catch((error) => {
+        console.error('Erreur:', error);
+    });
+    }
         function sendMessage() {
             const inputField = document.getElementById("user-input");
             const message = inputField.value.trim();
