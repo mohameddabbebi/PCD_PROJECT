@@ -20,7 +20,29 @@
     </div>
 
     <script>
-        function sendMessage1() {
+        function sendResume() {
+    chatbox.scrollTop = chatbox.scrollHeight;
+    
+    fetch('/Resume', {  // appel direct sans données
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        const botMessage = document.createElement("div");
+        botMessage.classList.add("message", "bot-message");
+        botMessage.innerText = data.response;
+        chatbox.appendChild(botMessage);
+
+        chatbox.scrollTop = chatbox.scrollHeight;
+    })
+    .catch((error) => {
+        console.error('Erreur:', error);
+    });
+    }
+        function GenereQuiz() {
     chatbox.scrollTop = chatbox.scrollHeight;
     
     fetch('/quiz', {  // appel direct sans données
