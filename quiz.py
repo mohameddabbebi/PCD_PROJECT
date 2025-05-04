@@ -1,80 +1,83 @@
-import re
-import random
-import ctransformers 
-from traduction import tranduction
+import pickle
+import numpy as np
+import faiss
+from sentence_transformers import SentenceTransformer
+import ctransformers
+from traduction import traduction
+def retrieve_relevant_texts(query, k=1):
+    embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
-def get_first_512_words(text):
-    # Utilisation d'une expression régulière pour séparer les mots et ponctuations
-    words = re.findall(r'\S+|[.,!?;]', text)  # \S+ capture les mots, et [.,!?;] capture les ponctuations
-    return ' '.join(words[:512])  # Récupérer les 512 premiers mots (y compris ponctuation)
+# Charger les fichiers Pickle
+    with open("texts.pkl", "rb") as f:
+      texts = pickle.load(f)
 
-def generate_quiz_from_data1(final_data, n, level_of_quiz):
-    context = []
-    random_numbers = random.sample(range(len(final_data)), n)
-    for i in range(n):
-        context.append(get_first_512_words(final_data[random_numbers[i]]['text']))
+    #with open("metadata.pkl", "rb") as f:
+     # metadata = pickle.load(f)
 
-    quiz = []
-    for i in range(n):
-        quiz.append(generate_quiz_from_context1(context[i], level_of_quiz,i))
+    #embeddings = np.load("embeddings.npy")
+    index1 = faiss.read_index("faiss_index.index")
+    # Convertir la requête en embedding
+    query_embedding = embedding_model.encode([query])
 
-    return quiz
+    # Recherche dans l'index FAISS
+    _, indices = index1.search(np.array(query_embedding, dtype=np.float32), k)  # Recherche dans l'index
 
-def generate_quiz_from_context1(context, level_of_quiz,i):
+    # Récupérer les textes pertinents en fonction des indices retournés
+    retrieved_texts = [texts[i] for i in indices[0]]
+
+    return retrieved_texts
+
+
+
+def get_contextual_response(context,question):
     llm = ctransformers.AutoModelForCausalLM.from_pretrained(
-        'C:\\Users\\ramib\\OneDrive\\Bureau\\PCD\\llama-2-7b-chat.Q4_K_M.gguf',
-        model_type='llama',
-        max_new_tokens=256,
-        temperature=0.5,
-        gpu_layers=25,
-        context_length=2048
-    )
-
-    # Choix du niveau de difficulté
-    if level_of_quiz == 2:
-        difficulty = "moyen"
-    elif level_of_quiz > 2:
-        difficulty = "difficile"
-    else:
-        difficulty = "facile"
-
+    'C:\\Users\\ramib\\OneDrive\\Bureau\\PCD\\llama-2-7b-chat.Q4_K_M.gguf',
+    model_type='llama',
+    max_new_tokens=512,
+    temperature=0.5, #0.1 kenit
+    gpu_layers=25,
+    context_length=2048  
+)
+    # Construction stricte du prompt LLaMA 2
     prompt = f"""<s>[INST] <<SYS>>
-Vous êtes un générateur de quiz en anglais. Suivez ces instructions à la lettre :
-1. Produisez exactement 2 questions à choix multiples.
-2. Chaque question doit comporter 3 options libellées A), B) et C) .
-3. Le quiz doit être de niveau **{difficulty}**.
-4. Ne préfixez pas par une introduction ni ne terminez par une conclusion.
-5. N’utilisez jamais un mot ou une expression anglaise (ex. “Here”, “Great”, etc.).
-6. Fournissez uniquement les questions et leurs propositions de réponses, sans autre texte.
+Vous êtes un expert IA hautement compétent, précis et détaillé. Vous fournissez toujours des réponses complètes, exactes et parfaitement structurées en anglais. Vous respectez strictement ces règles :
+
+1. Analyse approfondie du contexte fourni
+2. Réponses précises et factuelles
+3. Structure claire avec paragraphes organisés
+4. Langage professionnel et adapté
+5. Justification des réponses quand nécessaire
+6. Vérification interne de la cohérence
 
 Contexte :
 {context}
 <</SYS>>
-[/INST]"""
 
+Question : {question}
+
+Pour répondre :
+1. Comprenez parfaitement la question
+2. Analysez chaque élément du contexte pertinent
+3. Synthétisez les informations
+4. Formulez une réponse complète
+5. Vérifiez l'exactitude avant de répondre
+
+Fournissez maintenant la meilleure réponse possible : [/INST]"""
     try:
+        # Génération contrôlée
         response = llm(
             prompt,
-            max_new_tokens=256,
-            temperature=0.5,
-            top_p=0.95,
-            stop=["</s>", "[INST]"]
+            max_new_tokens=512,
+            temperature=0.5,  # Réduit les hallucinations
+            top_p=0.95,        # Contrôle de la diversité
+            stop=["</s>", "[INST]"]  # Tokens d'arrêt
         )
-        #zid dans le deuxieme appel de cette fonction il faut que Question 3,4 pas 1 et2.
+
+        # Nettoyage de la réponse
         response = response.split("[/INST]")[-1].strip()
         response = response.replace("<s>", "").replace("</s>", "").strip()
-        response=tranduction(response)
-        #response = re.sub(r'questions?\s+au\s+niveau\s+\*\*(facile|moderne|difficile)\*\*\s*:?', '',response, flags=re.IGNORECASE)
-        # 1. Supprimer tout avant le premier "Question"
-        match = re.search(r'(Question\s*1\s*:?.*)',response, re.IGNORECASE | re.DOTALL)
-        if match:
-           response = match.group(1)
-        response = re.sub(r'\s*(Question\s*\d*\s*:)', r'\n\1',response)
-    # ➕ Ajouter un saut de ligne avant chaque A), B), C), D)
-        response = re.sub(r'\s*([A-D]\))', r'\n\1', response)
-        if (i==1):
-            response= re.sub(r'Question\s*1\s*:', 'Question 3:',response)
-            response= re.sub(r'Question\s*2\s*:', 'Question 4:',response)
+        response=traduction(response)
         return response
+
     except Exception as e:
-        return f"Erreur de génération : {str(e)}"
+        return f"Erreur de génération : {str(e)}"  
