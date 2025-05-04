@@ -1,25 +1,7 @@
 import re
 import random
-from sentence_transformers import SentenceTransformer
 import ctransformers 
-from dataProcess import structure_data
-from transformers import MarianMTModel, MarianTokenizer
-# Variables globales pour mémoriser les objets chargés
-model = None
-tokenizer = None
-
-def trans(text):
-    global model, tokenizer  # permet de modifier les variables globales
-
-    if model is None or tokenizer is None:
-        print("Chargement du modèle...")
-        model_name = "Helsinki-NLP/opus-mt-en-fr"
-        tokenizer = MarianTokenizer.from_pretrained(model_name)
-        model = MarianMTModel.from_pretrained(model_name)
-
-    inputs = tokenizer(text, return_tensors="pt", padding=True)
-    translated = model.generate(**inputs)
-    return tokenizer.decode(translated[0], skip_special_tokens=True)
+from traduction import tranduction
 
 def get_first_512_words(text):
     # Utilisation d'une expression régulière pour séparer les mots et ponctuations
@@ -40,7 +22,7 @@ def generate_quiz_from_data1(final_data, n, level_of_quiz):
 
 def generate_quiz_from_context1(context, level_of_quiz,i):
     llm = ctransformers.AutoModelForCausalLM.from_pretrained(
-        'C:\\Users\\ramib\\Downloads\\chatbot_interface1\\chatbot_interface\\llama-2-7b-chat.Q4_K_M.gguf',
+        'C:\\Users\\ramib\\OneDrive\\Bureau\\PCD\\llama-2-7b-chat.Q4_K_M.gguf',
         model_type='llama',
         max_new_tokens=256,
         temperature=0.5,
@@ -81,7 +63,7 @@ Contexte :
         #zid dans le deuxieme appel de cette fonction il faut que Question 3,4 pas 1 et2.
         response = response.split("[/INST]")[-1].strip()
         response = response.replace("<s>", "").replace("</s>", "").strip()
-        response=trans(response)
+        response=tranduction(response)
         #response = re.sub(r'questions?\s+au\s+niveau\s+\*\*(facile|moderne|difficile)\*\*\s*:?', '',response, flags=re.IGNORECASE)
         # 1. Supprimer tout avant le premier "Question"
         match = re.search(r'(Question\s*1\s*:?.*)',response, re.IGNORECASE | re.DOTALL)
