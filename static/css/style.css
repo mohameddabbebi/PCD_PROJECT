@@ -110,3 +110,16 @@ button:hover {
 button:focus {
     outline: none;
 }
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  button.active {
+    background-color: #4CAF50; /* Green color for active state */
+    color: white;
+}
+
+button.inactive {
+    background-color: #f1f1f1; /* Gray color for inactive state */
+    color: #888;
+}
