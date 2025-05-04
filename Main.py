@@ -3,7 +3,7 @@ import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
 import ctransformers
-
+from traduction import traduction
 def retrieve_relevant_texts(query, k=1):
     embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
@@ -31,7 +31,7 @@ def retrieve_relevant_texts(query, k=1):
 
 def get_contextual_response(context,question):
     llm = ctransformers.AutoModelForCausalLM.from_pretrained(
-    'C:\\Users\\ramib\\Downloads\\chatbot_interface1\\chatbot_interface\\llama-2-7b-chat.Q4_K_M.gguf',
+    'C:\\Users\\ramib\\OneDrive\\Bureau\\PCD\\llama-2-7b-chat.Q4_K_M.gguf',
     model_type='llama',
     max_new_tokens=512,
     temperature=0.5, #0.1 kenit
@@ -40,7 +40,7 @@ def get_contextual_response(context,question):
 )
     # Construction stricte du prompt LLaMA 2
     prompt = f"""<s>[INST] <<SYS>>
-Vous êtes un expert IA hautement compétent, précis et détaillé. Vous fournissez toujours des réponses complètes, exactes et parfaitement structurées en français. Vous respectez strictement ces règles :
+Vous êtes un expert IA hautement compétent, précis et détaillé. Vous fournissez toujours des réponses complètes, exactes et parfaitement structurées en anglais. Vous respectez strictement ces règles :
 
 1. Analyse approfondie du contexte fourni
 2. Réponses précises et factuelles
@@ -76,7 +76,7 @@ Fournissez maintenant la meilleure réponse possible : [/INST]"""
         # Nettoyage de la réponse
         response = response.split("[/INST]")[-1].strip()
         response = response.replace("<s>", "").replace("</s>", "").strip()
-
+        response=traduction(response)
         return response
 
     except Exception as e:
