@@ -4,19 +4,18 @@ import faiss
 from sentence_transformers import SentenceTransformer
 import ctransformers
 
-
 def retrieve_relevant_texts(query, k=1):
     embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Charger les fichiers Pickle
-    with open("C:\\Users\\ramib\\Downloads\\chatbot_interface1\\chatbot_interface\\texts.pkl", "rb") as f:
+    with open("texts.pkl", "rb") as f:
       texts = pickle.load(f)
 
-    with open("C:\\Users\\ramib\\Downloads\\chatbot_interface1\\chatbot_interface\\metadata.pkl", "rb") as f:
-      metadata = pickle.load(f)
+    #with open("metadata.pkl", "rb") as f:
+     # metadata = pickle.load(f)
 
-    embeddings = np.load("C:\\Users\\ramib\\Downloads\\chatbot_interface1\\chatbot_interface\\embeddings.npy")
-    index1 = faiss.read_index("C:\\Users\\ramib\\Downloads\\chatbot_interface1\\chatbot_interface\\faiss_index.index")
+    #embeddings = np.load("embeddings.npy")
+    index1 = faiss.read_index("faiss_index.index")
     # Convertir la requête en embedding
     query_embedding = embedding_model.encode([query])
 
@@ -41,11 +40,29 @@ def get_contextual_response(context,question):
 )
     # Construction stricte du prompt LLaMA 2
     prompt = f"""<s>[INST] <<SYS>>
-    Répondez avec la langue française UNIQUEMENT en utilisant ce contexte :
-    context:{context}
-    <</SYS>>
+Vous êtes un expert IA hautement compétent, précis et détaillé. Vous fournissez toujours des réponses complètes, exactes et parfaitement structurées en français. Vous respectez strictement ces règles :
 
-    Question : {question} [/INST]"""
+1. Analyse approfondie du contexte fourni
+2. Réponses précises et factuelles
+3. Structure claire avec paragraphes organisés
+4. Langage professionnel et adapté
+5. Justification des réponses quand nécessaire
+6. Vérification interne de la cohérence
+
+Contexte :
+{context}
+<</SYS>>
+
+Question : {question}
+
+Pour répondre :
+1. Comprenez parfaitement la question
+2. Analysez chaque élément du contexte pertinent
+3. Synthétisez les informations
+4. Formulez une réponse complète
+5. Vérifiez l'exactitude avant de répondre
+
+Fournissez maintenant la meilleure réponse possible : [/INST]"""
     try:
         # Génération contrôlée
         response = llm(
@@ -63,12 +80,4 @@ def get_contextual_response(context,question):
         return response
 
     except Exception as e:
-        return f"Erreur de génération : {str(e)}"
-    
-
-# Exemple d'utilisation
-question = "donner les etapes de l'algorithme CSMA/CD"
-context = retrieve_relevant_texts(question)
-response = get_contextual_response(context,question)
-with open("reponse.txt", "w", encoding="utf-8") as f:
-    f.write(response)
+        return f"Erreur de génération : {str(e)}"  
