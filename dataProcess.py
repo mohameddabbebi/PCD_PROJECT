@@ -5,7 +5,12 @@ import nltk
 import json
 import pickle
 from nltk.tokenize import word_tokenize
-nltk.download('punkt')
+from spellchecker import SpellChecker
+#nltk.download('punkt')
+def elimineMotsNonFrançais(context):
+    spell = SpellChecker(language='fr')
+    corrected = [w for w in context if not spell.unknown([w])]
+    return corrected
 def extract_text_from_pdf(pdf_file_path, output_path):
     """
     Extracts text from all pages of a given PDF file using pdfplumber,
@@ -36,7 +41,6 @@ def extract_text_from_pdf(pdf_file_path, output_path):
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
-
 
 
 
@@ -113,12 +117,12 @@ def structure_data(file_p):
                 final_data.append({"text": chaine,"metadata" : {"topic" : map2[name_of_super_part], "subtopic" : name_of_part}})
   return final_data
 
-extract_text_from_pdf('C:\\Users\\ramib\\OneDrive\\Bureau\\PCD\\RLC.pdf','C:\\Users\\ramib\\OneDrive\\Bureau\\PCD\\')
+#extract_text_from_pdf('C:\\Users\\ramib\\OneDrive\\Bureau\\PCD\\RLC.pdf','C:\\Users\\ramib\\OneDrive\\Bureau\\PCD\\')
 
 
 
 
-nltk.download('punkt_tab')
+#nltk.download('punkt_tab')
 
 def count_tokens_nltk(word):
     tokens = nltk.tokenize.word_tokenize(word)
@@ -126,7 +130,7 @@ def count_tokens_nltk(word):
 
 
 
-
+"""
 def pre_of_the_preprocessing(final_data) :
 
   final_of_the_final_data =[]
@@ -146,19 +150,19 @@ def pre_of_the_preprocessing(final_data) :
      final_of_the_final_data.append({'text':subcontext,'metadata':{'topic':x['metadata']['topic'],'subtopic':x['metadata']['subtopic']}})
   return final_of_the_final_data
 
-final_data = structure_data('C:\\Users\\ramib\\OneDrive\\Bureau\\PCD\\file1.txt')
-#y=pre_of_the_preprocessing(final_data)
-y=final_data
-with open("data.json", "w", encoding="utf-8") as f:
+  
+"""
+def calcul_TextetMetaDataPkl(y):
+  with open("data.json", "w", encoding="utf-8") as f:
     json.dump(y, f, ensure_ascii=False, indent=4)
 
-texts = [entry["text"] for entry in y]
-metadata = [entry["metadata"] for entry in y]
+  texts = [entry["text"] for entry in y]
+  metadata = [entry["metadata"] for entry in y]
 # Sauvegarder les textes et métadonnées dans des fichiers .pkl
-with open("texts.pkl", "wb") as f:
+  with open("texts.pkl", "wb") as f:
     pickle.dump(texts, f)
 
-with open("metadata.pkl", "wb") as f:
+  with open("metadata.pkl", "wb") as f:
     pickle.dump(metadata, f)
 
 
