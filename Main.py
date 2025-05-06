@@ -34,7 +34,7 @@ def get_contextual_response(context,question):
     'C:\\Users\\ramib\\OneDrive\\Bureau\\PCD\\llama-2-7b-chat.Q4_K_M.gguf',
     model_type='llama',
     max_new_tokens=512,
-    temperature=0.5, #0.1 kenit
+    temperature=0.5, 
     gpu_layers=25,
     context_length=2048  
 )
