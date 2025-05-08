@@ -40,7 +40,8 @@ def get_contextual_response(context,question):
 )
     # Construction stricte du prompt LLaMA 2
     prompt = f"""<s>[INST] <<SYS>>
-Vous êtes un expert IA hautement compétent, précis et détaillé. Vous fournissez toujours des réponses complètes, exactes et parfaitement structurées en anglais. Vous respectez strictement ces règles :
+Vous êtes un expert IA hautement compétent, précis et détaillé. Vous fournissez toujours des réponses complètes, 
+exactes et parfaitement structurées en anglais. Vous respectez strictement ces règles :
 
 1. Analyse approfondie du contexte fourni
 2. Réponses précises et factuelles
