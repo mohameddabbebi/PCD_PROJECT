@@ -50,7 +50,6 @@ def chat():
     context = retrieve_relevant_texts(user_input)
     response = get_contextual_response(context,user_input)
     #response="bla bla bla"
-    print(context)
     
     # Retourner la réponse sous forme de JSON
     return jsonify({"response": response})
